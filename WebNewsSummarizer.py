@@ -84,6 +84,7 @@ if option == 1 or option==3:
     # print(total_response[0][:11])
     # print(total_response[1][:11])
 if option == 2 or option==3:
+    print("AI summary:")
     prompt = """
     You are a news editor.
 
@@ -113,6 +114,7 @@ if option == 2 or option==3:
     Do not explain.
     Do not analyze.
     Output only the final news feed.
+    10 from world and 10 from india
 
     Headlines:
     """ + str(" ".join(world_news))

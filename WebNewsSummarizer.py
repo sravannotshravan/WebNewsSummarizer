@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 import requests
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 world_urls = {
     "BBC": "https://www.bbc.com/news",
     "Reuters": "https://www.reuters.com/world/",
@@ -64,10 +64,56 @@ with ThreadPoolExecutor(max_workers=3) as executor:
 total_response = ""
 for news_response in responses:
     total_response+=news_response
-print(total_response)
+#print(total_response)
+prompt = """
+You are the editor of a daily news digest.
+
+The input contains scraped news headlines from multiple sources.
+
+Your task:
+- Extract only genuine news stories.
+- Ignore advertisements, navigation links, app promotions, sponsored content, and website boilerplate.
+- Remove duplicate stories.
+- Select the most important stories.
+
+Rules:
+Rules:
+- NEVER ask questions.
+- NEVER request clarification.
+- NEVER explain limitations.
+- NEVER discuss the input.
+- NEVER suggest next steps.
+- NEVER ask the user for more information.
+- Assume all necessary information has already been provided.
+- Produce the final briefing and stop.
+- NEVER say "the text suggests", "the snippets indicate", "the provided text", or similar phrases.
+- NEVER create sections such as "Themes", "Patterns", or "Topics".
+- Do not invent facts that are not reasonably inferable from the headlines.
+
+Output format:
+
+# Daily News Briefing
+
+## Story 1
+Headline: ...
+Summary: ...
+
+## Story 2
+Headline: ...
+Summary: ...
+
+## Story 3
+Headline: ...
+Summary: ...
+
+Continue until all major stories are covered.
+
+Cover 10 stories.
+Input:
+""" + total_response
 response = ollama.generate(
     model = "gemma4:e4b",
-    prompt = "Convert these headlines into a news briefing. For each headline:- Explain what happened.- Keep it to 2-3 sentences."+str(total_response)
+    prompt = prompt
 )
 
 print(response["response"])

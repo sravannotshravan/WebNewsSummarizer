@@ -5,116 +5,121 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 import logging
 logging.basicConfig(level=logging.WARNING)
+
+
+option = int(input("Welcome to the CLI news reader! Enter 1 for direct news scraping, 2 for direct news summary , 3 for both: "))
+# world_urls = {
+#     "BBC": "https://www.bbc.com/news",
+#     "Reuters": "https://www.reuters.com/world/",
+#     "AP News": "https://apnews.com/world-news",
+#     "Al Jazeera": "https://www.aljazeera.com/news/",
+#     "NPR World": "https://www.npr.org/sections/world/"
+# }
+# indian_urls = {
+#     "The Hindu": "https://www.thehindu.com/news/national/",
+#     "Indian Express": "https://indianexpress.com/section/india/",
+#     "NDTV India": "https://www.ndtv.com/india",
+#     "Hindustan Times": "https://www.hindustantimes.com/india-news",
+#     "Times of India": "https://timesofindia.indiatimes.com/india"
+# }
+
+# business_urls = {
+#     "Mint": "https://www.livemint.com/",
+#     "Economic Times": "https://economictimes.indiatimes.com/",
+#     "Reuters Business": "https://www.reuters.com/business/",
+#     "Bloomberg": "https://www.bloomberg.com/",
+#     "CNBC": "https://www.cnbc.com/world/"
+# }
+
+# tech_urls = {
+#     "TechCrunch": "https://techcrunch.com/",
+#     "Ars Technica": "https://arstechnica.com/",
+#     "The Verge": "https://www.theverge.com/",
+#     "Wired": "https://www.wired.com/",
+#     "Hacker News": "https://news.ycombinator.com/"
+# }
+
 world_urls = {
-    "BBC": "https://www.bbc.com/news",
-    "Reuters": "https://www.reuters.com/world/",
-    "AP News": "https://apnews.com/world-news",
-    "Al Jazeera": "https://www.aljazeera.com/news/",
-    "NPR World": "https://www.npr.org/sections/world/"
+    "BBC": "https://www.bbc.com/news"
 }
+
 indian_urls = {
-    "The Hindu": "https://www.thehindu.com/news/national/",
-    "Indian Express": "https://indianexpress.com/section/india/",
-    "NDTV India": "https://www.ndtv.com/india",
-    "Hindustan Times": "https://www.hindustantimes.com/india-news",
-    "Times of India": "https://timesofindia.indiatimes.com/india"
-}
-
-business_urls = {
-    "Mint": "https://www.livemint.com/",
-    "Economic Times": "https://economictimes.indiatimes.com/",
-    "Reuters Business": "https://www.reuters.com/business/",
-    "Bloomberg": "https://www.bloomberg.com/",
-    "CNBC": "https://www.cnbc.com/world/"
-}
-
-tech_urls = {
-    "TechCrunch": "https://techcrunch.com/",
-    "Ars Technica": "https://arstechnica.com/",
-    "The Verge": "https://www.theverge.com/",
-    "Wired": "https://www.wired.com/",
-    "Hacker News": "https://news.ycombinator.com/"
+    "BBC India": "https://www.bbc.com/news/world/asia/india"
 }
 total_urls = world_urls.copy()
 total_urls.update(indian_urls)
 
 def fetch_news(i,url):
-    extracted_news=""
+    extracted_news=[]
     src = f"Source:{i} "
     logging.debug(src)
-    extracted_news+=src
+    extracted_news.append(src)
     r=requests.get(url)
     soup = BeautifulSoup(r.content,"html.parser")
-    nt = soup.title
-    logging.debug(nt)
-    nh1 = soup.find_all("h1")
-    logging.debug(nh1)
-    nh2 =""
+    nh2 =[]
     for tag in soup.find_all("h2"):
         text = tag.get_text(strip=True)
         if(len(text)>20):
-            nh2+=text+"\n"
+            nh2.append(text)
     logging.debug(nh2)
-    extracted_news+=str(nt)+str(nh1)+str(nh2)
+    extracted_news.extend(nh2)
     return extracted_news
 
 with ThreadPoolExecutor(max_workers=3) as executor:
     responses = executor.map(fetch_news,total_urls.keys(),total_urls.values())
 
-total_response = ""
+total_response = []
 for news_response in responses:
-    total_response+=news_response
-#print(total_response)
-prompt = """
-You are the editor of a daily news digest.
+    total_response.append(news_response)
 
-The input contains scraped news headlines from multiple sources.
+world_news = total_response[0][1:11]
+indian_news = total_response[1][1:11]
+if option == 1 or option==3:
+    print("World news (BBC):")
+    for headline in world_news:
+        print(headline)
+    print("Indian news (BBC):")
+    for headline in indian_news:
+        print(headline)
+    # print(total_response[0][:11])
+    # print(total_response[1][:11])
+if option == 2 or option==3:
+    prompt = """
+    You are a news editor.
 
-Your task:
-- Extract only genuine news stories.
-- Ignore advertisements, navigation links, app promotions, sponsored content, and website boilerplate.
-- Remove duplicate stories.
-- Select the most important stories.
+    Below is a list of headlines from BBC and BBC India.
 
-Rules:
-Rules:
-- NEVER ask questions.
-- NEVER request clarification.
-- NEVER explain limitations.
-- NEVER discuss the input.
-- NEVER suggest next steps.
-- NEVER ask the user for more information.
-- Assume all necessary information has already been provided.
-- Produce the final briefing and stop.
-- NEVER say "the text suggests", "the snippets indicate", "the provided text", or similar phrases.
-- NEVER create sections such as "Themes", "Patterns", or "Topics".
-- Do not invent facts that are not reasonably inferable from the headlines.
+    Remove duplicates and keep the most important stories.
 
-Output format:
+    Output format:
 
-# Daily News Briefing
+    # Daily News Feed (World)
 
-## Story 1
-Headline: ...
-Summary: ...
+    • Headline
 
-## Story 2
-Headline: ...
-Summary: ...
+    • Headline
 
-## Story 3
-Headline: ...
-Summary: ...
+    • Headline
 
-Continue until all major stories are covered.
+    # Daily News Feed (India)
 
-Cover 10 stories.
-Input:
-""" + total_response
-response = ollama.generate(
-    model = "gemma4:e4b",
-    prompt = prompt
-)
+    • Headline
 
-print(response["response"])
+    • Headline
+
+    • Headline
+
+    Do not summarize.
+    Do not explain.
+    Do not analyze.
+    Output only the final news feed.
+
+    Headlines:
+    """ + str(" ".join(world_news))
+    response = ollama.generate(
+        model = "gemma4:e2b",
+        prompt = prompt
+    )
+
+    print(response["response"])
 

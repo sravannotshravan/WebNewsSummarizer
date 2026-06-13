@@ -117,7 +117,7 @@ if option == 2 or option==3:
     10 from world and 10 from india
 
     Headlines:
-    """ + str(" ".join(world_news))
+    """ + str(" ".join(world_news+indian_news))
     response = ollama.generate(
         model = "gemma4:e2b",
         prompt = prompt

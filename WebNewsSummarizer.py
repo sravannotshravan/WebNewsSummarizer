@@ -92,30 +92,9 @@ if option == 2 or option==3:
 
     Remove duplicates and keep the most important stories.
 
-    Output format:
+    Generate a summary of all the world news and indian news in 50 words each. Use the below headlines to aid you. 
 
-    # Daily News Feed (World)
-
-    • Headline
-
-    • Headline
-
-    • Headline
-
-    # Daily News Feed (India)
-
-    • Headline
-
-    • Headline
-
-    • Headline
-
-    Do not summarize.
-    Do not explain.
-    Do not analyze.
-    Output only the final news feed.
-    10 from world and 10 from india
-
+    Do not explain your choices. just give the summary
     Headlines:
     """ + str(" ".join(world_news+indian_news))
     response = ollama.generate(
